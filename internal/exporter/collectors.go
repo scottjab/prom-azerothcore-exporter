@@ -51,6 +51,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 			race,
 			COUNT(*) as count
 		FROM characters 
+		WHERE (deleteDate IS NULL OR deleteDate = 0)
 		GROUP BY race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -78,6 +79,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 			race,
 			COUNT(*) as count
 		FROM characters 
+		WHERE (deleteDate IS NULL OR deleteDate = 0)
 		GROUP BY level, race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -104,6 +106,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 			race,
 			COUNT(*) as count
 		FROM characters 
+		WHERE (deleteDate IS NULL OR deleteDate = 0)
 		GROUP BY class, race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -158,6 +161,7 @@ func (e *Exporter) collectMailMetrics() error {
 			COUNT(*) as count
 		FROM mail m
 		JOIN characters c ON m.sender = c.guid
+		WHERE (c.deleteDate IS NULL OR c.deleteDate = 0)
 		GROUP BY c.race
 	`
 	rows, err := e.connections.Characters.Query(query)
@@ -284,7 +288,7 @@ func (e *Exporter) collectGuildMetrics() error {
 func (e *Exporter) collectMaxLevelCharMetrics() error {
 	metrics.MaxLevelCharCount.Reset()
 	// AzerothCore WotLK max level is 80
-	query := `SELECT race, COUNT(*) FROM characters WHERE level = 80 GROUP BY race`
+	query := `SELECT race, COUNT(*) FROM characters WHERE level = 80 AND (deleteDate IS NULL OR deleteDate = 0) GROUP BY race`
 	rows, err := e.connections.Characters.Query(query)
 	if err != nil {
 		return err
@@ -552,7 +556,7 @@ func (e *Exporter) collectNetworkMetrics() error {
 
 	// Average latency
 	var avgLatency float64
-	query := `SELECT AVG(latency) FROM characters WHERE online = 1 AND latency > 0`
+	query := `SELECT AVG(latency) FROM characters WHERE online = 1 AND latency > 0 AND (deleteDate IS NULL OR deleteDate = 0)`
 	err := e.connections.Characters.QueryRow(query).Scan(&avgLatency)
 	if err != nil && err != sql.ErrNoRows {
 		return err
@@ -564,7 +568,7 @@ func (e *Exporter) collectNetworkMetrics() error {
 
 	// High latency players (>200ms)
 	var highLatencyCount int
-	query = `SELECT COUNT(*) FROM characters WHERE online = 1 AND latency > 200`
+	query = `SELECT COUNT(*) FROM characters WHERE online = 1 AND latency > 200 AND (deleteDate IS NULL OR deleteDate = 0)`
 	err = e.connections.Characters.QueryRow(query).Scan(&highLatencyCount)
 	if err != nil {
 		return err
@@ -574,7 +578,7 @@ func (e *Exporter) collectNetworkMetrics() error {
 
 	// Min/Max latency
 	var minLatency, maxLatency int
-	query = `SELECT MIN(latency), MAX(latency) FROM characters WHERE online = 1 AND latency > 0`
+	query = `SELECT MIN(latency), MAX(latency) FROM characters WHERE online = 1 AND latency > 0 AND (deleteDate IS NULL OR deleteDate = 0)`
 	err = e.connections.Characters.QueryRow(query).Scan(&minLatency, &maxLatency)
 	if err != nil && err != sql.ErrNoRows {
 		return err
