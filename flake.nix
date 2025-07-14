@@ -31,7 +31,7 @@
 
         apps.default = {
           type = "app";
-          program = "${self.packages.${system}.default}/bin/prom-azerothcore-exporter";
+          program = "${self.packages.${system}.default}/bin/exporter";
         };
 
         devShells.default = pkgs.mkShell {
@@ -145,7 +145,7 @@
                 Type = "simple";
                 User = cfg.user;
                 Group = cfg.group;
-                ExecStart = "${cfg.package}/bin/prom-azerothcore-exporter";
+                ExecStart = "${cfg.package}/bin/exporter";
                 Restart = "always";
                 RestartSec = "10";
                 ProtectSystem = "strict";
