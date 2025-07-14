@@ -16,8 +16,9 @@
           pname = "prom-azerothcore-exporter";
           version = "1.0.0";
           src = ./.;
+          subPackages = [ "cmd/exporter" ];
 
-          vendorHash = null;
+          vendorHash = "sha256-km3t3EDL05VPVhXSqkh6xzbKv97I1vaxXa4llNs0VG8=";
 
           meta = with pkgs.lib; {
             description = "Prometheus exporter for WoW private servers running AzerothCore";
@@ -43,8 +44,8 @@
           shellHook = ''
             echo "WoW Private Server Exporter Development Environment"
             echo "Available commands:"
-            echo "  go run .                    - Run the exporter"
-            echo "  go build -o exporter .      - Build the exporter"
+            echo "  go run ./cmd/exporter       - Run the exporter"
+            echo "  go build -o exporter ./cmd/exporter - Build the exporter"
             echo "  go test ./...               - Run tests"
             echo ""
             echo "Environment variables:"
