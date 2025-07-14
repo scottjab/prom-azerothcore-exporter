@@ -6,8 +6,14 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
       in
@@ -57,8 +63,15 @@
           '';
         };
       }
-    ) // {
-      nixosModules.default = { config, lib, pkgs, ... }:
+    )
+    // {
+      nixosModules.default =
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
         with lib;
         let
           cfg = config.services.wow-private-server-exporter;
@@ -141,43 +154,52 @@
               wantedBy = [ "multi-user.target" ];
               after = [ "network.target" ];
 
-              serviceConfig = {
-                Type = "simple";
-                User = cfg.user;
-                Group = cfg.group;
-                ExecStart = "${cfg.package}/bin/exporter";
-                Restart = "always";
-                RestartSec = "10";
-                ProtectSystem = "strict";
-                ProtectHome = true;
-                NoNewPrivileges = true;
-                PrivateTmp = true;
-                PrivateDevices = true;
-                ProtectKernelTunables = true;
-                ProtectKernelModules = true;
-                ProtectControlGroups = true;
-                RestrictRealtime = true;
-                RestrictSUIDSGID = true;
-                ReadWritePaths = [ "/var/lib/wow-exporter" ];
-                Environment = [
-                  "WOW_DB_USER=${cfg.database.user}"
-                  "WOW_DB_PASS=${cfg.database.password}"
-                  "WOW_DB_HOST=${cfg.database.host}"
-                  "WOW_DB_PORT=${toString cfg.database.port}"
-                  "PORT=${toString cfg.port}"
-                ];
-              } // (if cfg.environmentFile != null then {
-                EnvironmentFile = [ cfg.environmentFile ];
-              } else { });
+              serviceConfig =
+                {
+                  Type = "simple";
+                  User = cfg.user;
+                  Group = cfg.group;
+                  ExecStart = "${cfg.package}/bin/exporter";
+                  Restart = "always";
+                  RestartSec = "10";
+                  ProtectSystem = "strict";
+                  ProtectHome = true;
+                  NoNewPrivileges = true;
+                  PrivateTmp = true;
+                  PrivateDevices = true;
+                  ProtectKernelTunables = true;
+                  ProtectKernelModules = true;
+                  ProtectControlGroups = true;
+                  RestrictRealtime = true;
+                  RestrictSUIDSGID = true;
+                  ReadWritePaths = [ "/var/lib/wow-exporter" ];
+                  Environment = [
+                    "WOW_DB_USER=${cfg.database.user}"
+                    "WOW_DB_PASS=${cfg.database.password}"
+                    "WOW_DB_HOST=${cfg.database.host}"
+                    "WOW_DB_PORT=${toString cfg.database.port}"
+                    "PORT=${toString cfg.port}"
+                  ];
+                }
+                // (
+                  if cfg.environmentFile != null then
+                    {
+                      EnvironmentFile = [ cfg.environmentFile ];
+                    }
+                  else
+                    { }
+                );
             };
 
             # Prometheus configuration
             services.prometheus.scrapeConfigs = mkIf config.services.prometheus.enable [
               {
                 job_name = "wow-private-server";
-                static_configs = [{
-                  targets = [ "localhost:${toString cfg.port}" ];
-                }];
+                static_configs = [
+                  {
+                    targets = [ "localhost:${toString cfg.port}" ];
+                  }
+                ];
                 scrape_interval = "15s";
                 metrics_path = "/metrics";
               }
@@ -185,4 +207,4 @@
           };
         };
     };
-} 
+}

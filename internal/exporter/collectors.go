@@ -17,6 +17,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 	metrics.PlayersTotal.Reset()
 	metrics.PlayersByLevel.Reset()
 	metrics.PlayersByClass.Reset()
+	metrics.OnlinePlayersByLevel.Reset()
 
 	// Query for online players by faction
 	query := `
@@ -46,12 +47,18 @@ func (e *Exporter) collectPlayerMetrics() error {
 	}
 
 	// Query for total players by faction
+	// Exclude likely test characters: very recent creations and test names
 	query = `
 		SELECT 
 			race,
 			COUNT(*) as count
 		FROM characters 
 		WHERE (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
 		GROUP BY race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -73,6 +80,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 	}
 
 	// Query for players by level and faction
+	// Exclude likely test characters: filter by creation date, test names, and never logged in characters
 	query = `
 		SELECT 
 			level,
@@ -80,6 +88,15 @@ func (e *Exporter) collectPlayerMetrics() error {
 			COUNT(*) as count
 		FROM characters 
 		WHERE (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND logout_time > 0 -- Exclude characters that have never logged in
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
+		AND name NOT LIKE '%temp%'
+		AND name NOT LIKE '%demo%'
+		AND name NOT LIKE '%example%'
 		GROUP BY level, race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -100,6 +117,7 @@ func (e *Exporter) collectPlayerMetrics() error {
 	}
 
 	// Query for players by class and faction
+	// Exclude likely test characters: very recent creations and test names
 	query = `
 		SELECT 
 			class,
@@ -107,6 +125,11 @@ func (e *Exporter) collectPlayerMetrics() error {
 			COUNT(*) as count
 		FROM characters 
 		WHERE (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
 		GROUP BY class, race
 	`
 	rows, err = e.connections.Characters.Query(query)
@@ -125,6 +148,55 @@ func (e *Exporter) collectPlayerMetrics() error {
 		if faction != "" && className != "" {
 			metrics.PlayersByClass.WithLabelValues(className, faction).Add(float64(count))
 		}
+	}
+
+	// Query for online players by level with character and account name
+	// First get character information from characters database
+	query = `
+		SELECT 
+			c.name,
+			c.level,
+			c.account
+		FROM characters c
+		WHERE c.online = 1
+		AND (c.deleteDate IS NULL OR c.deleteDate = 0)
+		ORDER BY c.level, c.name
+	`
+	rows, err = e.connections.Characters.Query(query)
+	if err != nil {
+		return err
+	}
+	defer database.CloseRowsWithLog(rows)
+
+	// Create a map to store account IDs and their usernames
+	accountMap := make(map[int]string)
+
+	for rows.Next() {
+		var characterName string
+		var level, accountID int
+		if err := rows.Scan(&characterName, &level, &accountID); err != nil {
+			return err
+		}
+
+		// Get account username if we haven't already
+		accountName, exists := accountMap[accountID]
+		if !exists {
+			// Query auth database for account username
+			var username string
+			authQuery := `SELECT username FROM account WHERE id = ?`
+			err := e.connections.Auth.QueryRow(authQuery, accountID).Scan(&username)
+			if err != nil {
+				// If we can't get the username, use a placeholder
+				username = fmt.Sprintf("account_%d", accountID)
+			}
+			accountMap[accountID] = username
+			accountName = username
+		}
+
+		metrics.OnlinePlayersByLevel.WithLabelValues(
+			characterName,
+			accountName,
+		).Set(float64(level))
 	}
 
 	return nil
@@ -155,6 +227,7 @@ func (e *Exporter) collectMailMetrics() error {
 	metrics.MailWithItems.Add(float64(mailWithItemsCount))
 
 	// Query for mail by faction (based on sender's race)
+	// Exclude likely test characters: very recent creations and test names
 	query = `
 		SELECT 
 			c.race,
@@ -162,6 +235,11 @@ func (e *Exporter) collectMailMetrics() error {
 		FROM mail m
 		JOIN characters c ON m.sender = c.guid
 		WHERE (c.deleteDate IS NULL OR c.deleteDate = 0)
+		AND (c.creation_date IS NULL OR c.creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND c.name NOT LIKE '%test%'
+		AND c.name NOT LIKE '%admin%'
+		AND c.name NOT LIKE '%gm%'
+		AND c.name NOT LIKE '%dev%'
 		GROUP BY c.race
 	`
 	rows, err := e.connections.Characters.Query(query)
@@ -288,7 +366,19 @@ func (e *Exporter) collectGuildMetrics() error {
 func (e *Exporter) collectMaxLevelCharMetrics() error {
 	metrics.MaxLevelCharCount.Reset()
 	// AzerothCore WotLK max level is 80
-	query := `SELECT race, COUNT(*) FROM characters WHERE level = 80 AND (deleteDate IS NULL OR deleteDate = 0) GROUP BY race`
+	// Exclude likely test characters: very recent creations and test names
+	query := `
+		SELECT race, COUNT(*) 
+		FROM characters 
+		WHERE level = 80 
+		AND (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
+		GROUP BY race
+	`
 	rows, err := e.connections.Characters.Query(query)
 	if err != nil {
 		return err
@@ -555,20 +645,42 @@ func (e *Exporter) collectNetworkMetrics() error {
 	metrics.PlayerLatencyStats.Reset()
 
 	// Average latency
-	var avgLatency float64
-	query := `SELECT AVG(latency) FROM characters WHERE online = 1 AND latency > 0 AND (deleteDate IS NULL OR deleteDate = 0)`
+	var avgLatency sql.NullFloat64
+	query := `
+		SELECT AVG(latency) 
+		FROM characters 
+		WHERE online = 1 
+		AND latency > 0 
+		AND (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
+	`
 	err := e.connections.Characters.QueryRow(query).Scan(&avgLatency)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
-	if err != sql.ErrNoRows {
-		metrics.PlayerLatencyStats.WithLabelValues("average").Set(avgLatency)
-		metrics.AverageLatency.Set(avgLatency)
+	if err != sql.ErrNoRows && avgLatency.Valid {
+		metrics.PlayerLatencyStats.WithLabelValues("average").Set(avgLatency.Float64)
+		metrics.AverageLatency.Set(avgLatency.Float64)
 	}
 
 	// High latency players (>200ms)
 	var highLatencyCount int
-	query = `SELECT COUNT(*) FROM characters WHERE online = 1 AND latency > 200 AND (deleteDate IS NULL OR deleteDate = 0)`
+	query = `
+		SELECT COUNT(*) 
+		FROM characters 
+		WHERE online = 1 
+		AND latency > 200 
+		AND (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
+	`
 	err = e.connections.Characters.QueryRow(query).Scan(&highLatencyCount)
 	if err != nil {
 		return err
@@ -577,15 +689,30 @@ func (e *Exporter) collectNetworkMetrics() error {
 	metrics.PlayerLatencyStats.WithLabelValues("high_latency").Set(float64(highLatencyCount))
 
 	// Min/Max latency
-	var minLatency, maxLatency int
-	query = `SELECT MIN(latency), MAX(latency) FROM characters WHERE online = 1 AND latency > 0 AND (deleteDate IS NULL OR deleteDate = 0)`
+	var minLatency, maxLatency sql.NullInt64
+	query = `
+		SELECT MIN(latency), MAX(latency) 
+		FROM characters 
+		WHERE online = 1 
+		AND latency > 0 
+		AND (deleteDate IS NULL OR deleteDate = 0)
+		AND (creation_date IS NULL OR creation_date < DATE_SUB(NOW(), INTERVAL 24 HOUR)) -- Exclude characters created in last 24 hours
+		AND name NOT LIKE '%test%'
+		AND name NOT LIKE '%admin%'
+		AND name NOT LIKE '%gm%'
+		AND name NOT LIKE '%dev%'
+	`
 	err = e.connections.Characters.QueryRow(query).Scan(&minLatency, &maxLatency)
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
 	if err != sql.ErrNoRows {
-		metrics.PlayerLatencyStats.WithLabelValues("min").Set(float64(minLatency))
-		metrics.PlayerLatencyStats.WithLabelValues("max").Set(float64(maxLatency))
+		if minLatency.Valid {
+			metrics.PlayerLatencyStats.WithLabelValues("min").Set(float64(minLatency.Int64))
+		}
+		if maxLatency.Valid {
+			metrics.PlayerLatencyStats.WithLabelValues("max").Set(float64(maxLatency.Int64))
+		}
 	}
 
 	// IP bans
@@ -800,16 +927,28 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 
 	if rows.Next() {
 		var totalParticipants, totalWinners int
-		var avgKillingBlows, avgDeaths, avgHonorableKills, avgBonusHonor, avgDamageDone, avgHealingDone float64
+		var avgKillingBlows, avgDeaths, avgHonorableKills, avgBonusHonor, avgDamageDone, avgHealingDone sql.NullFloat64
 		if err := rows.Scan(&totalParticipants, &totalWinners, &avgKillingBlows, &avgDeaths, &avgHonorableKills, &avgBonusHonor, &avgDamageDone, &avgHealingDone); err == nil {
 			metrics.BattlegroundPlayerStats.WithLabelValues("total_participants").Set(float64(totalParticipants))
 			metrics.BattlegroundPlayerStats.WithLabelValues("total_winners").Set(float64(totalWinners))
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_killing_blows").Set(avgKillingBlows)
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_deaths").Set(avgDeaths)
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_honorable_kills").Set(avgHonorableKills)
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_bonus_honor").Set(avgBonusHonor)
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_damage_done").Set(avgDamageDone)
-			metrics.BattlegroundPlayerStats.WithLabelValues("avg_healing_done").Set(avgHealingDone)
+			if avgKillingBlows.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_killing_blows").Set(avgKillingBlows.Float64)
+			}
+			if avgDeaths.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_deaths").Set(avgDeaths.Float64)
+			}
+			if avgHonorableKills.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_honorable_kills").Set(avgHonorableKills.Float64)
+			}
+			if avgBonusHonor.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_bonus_honor").Set(avgBonusHonor.Float64)
+			}
+			if avgDamageDone.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_damage_done").Set(avgDamageDone.Float64)
+			}
+			if avgHealingDone.Valid {
+				metrics.BattlegroundPlayerStats.WithLabelValues("avg_healing_done").Set(avgHealingDone.Float64)
+			}
 		}
 	}
 
@@ -866,11 +1005,17 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 	defer database.CloseRowsWithLog(rows)
 
 	if rows.Next() {
-		var last24h, last7d, last30d int
+		var last24h, last7d, last30d sql.NullInt64
 		if err := rows.Scan(&last24h, &last7d, &last30d); err == nil {
-			metrics.RecentBattlegrounds.WithLabelValues("last_24h").Set(float64(last24h))
-			metrics.RecentBattlegrounds.WithLabelValues("last_7d").Set(float64(last7d))
-			metrics.RecentBattlegrounds.WithLabelValues("last_30d").Set(float64(last30d))
+			if last24h.Valid {
+				metrics.RecentBattlegrounds.WithLabelValues("last_24h").Set(float64(last24h.Int64))
+			}
+			if last7d.Valid {
+				metrics.RecentBattlegrounds.WithLabelValues("last_7d").Set(float64(last7d.Int64))
+			}
+			if last30d.Valid {
+				metrics.RecentBattlegrounds.WithLabelValues("last_30d").Set(float64(last30d.Int64))
+			}
 		}
 	}
 

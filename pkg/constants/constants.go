@@ -21,6 +21,25 @@ var RaceToFaction = map[int]string{
 	26: "Horde",    // Pandaren (Horde)
 }
 
+// WoW race names
+var RaceNames = map[int]string{
+	1:  "Human",
+	2:  "Orc",
+	3:  "Dwarf",
+	4:  "Night Elf",
+	5:  "Undead",
+	6:  "Tauren",
+	7:  "Gnome",
+	8:  "Troll",
+	9:  "Goblin",
+	10: "Blood Elf",
+	11: "Draenei",
+	22: "Worgen",
+	24: "Pandaren (Neutral)",
+	25: "Pandaren (Alliance)",
+	26: "Pandaren (Horde)",
+}
+
 // WoW class names
 var ClassNames = map[int]string{
 	1:  "Warrior",

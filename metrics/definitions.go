@@ -37,6 +37,14 @@ var (
 		},
 		[]string{"class", "faction"},
 	)
+
+	OnlinePlayersByLevel = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "wow_online_players_by_level",
+			Help: "Online characters by name and account, value is the character's level",
+		},
+		[]string{"character_name", "account_name"},
+	)
 )
 
 // Mail metrics
