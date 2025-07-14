@@ -469,14 +469,77 @@
       "type": "piechart"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "KuwEYMs4z"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "vis": false
+            }
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 18
+      },
       "id": 9,
-      "title": "Account Management",
-      "type": "row",
-      "collapsed": false,
-      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 18}
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true,
+          "values": []
+        },
+        "pieType": "pie",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "KuwEYMs4z"
+          },
+          "expr": "wow_online_players_by_level",
+          "interval": "",
+          "legendFormat": "{{character_name}} ({{account_name}}) - Level {{__value__}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Online Players by Level",
+      "type": "piechart"
     },
     {
       "id": 10,
+      "title": "Account Management",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 26}
+    },
+    {
+      "id": 11,
       "title": "Account Statistics",
       "type": "stat",
       "targets": [
@@ -502,10 +565,10 @@
           "color": {"mode": "palette-classic"}
         }
       },
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 19}
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 27}
     },
     {
-      "id": 11,
+      "id": 12,
       "title": "Character Statistics",
       "type": "stat",
       "targets": [
@@ -522,17 +585,17 @@
           "legendFormat": "Total Guilds"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 19}
-    },
-    {
-      "id": 12,
-      "title": "Mail System",
-      "type": "row",
-      "collapsed": false,
-      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 27}
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 27}
     },
     {
       "id": 13,
+      "title": "Mail System",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 35}
+    },
+    {
+      "id": 14,
       "title": "Mail Overview",
       "type": "stat",
       "targets": [
@@ -549,10 +612,10 @@
           "legendFormat": "Unread Mail"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28}
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36}
     },
     {
-      "id": 14,
+      "id": 15,
       "title": "Mail by Faction",
       "type": "barchart",
       "targets": [
@@ -561,17 +624,17 @@
           "legendFormat": "{{faction}}"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28}
-    },
-    {
-      "id": 15,
-      "title": "Economy & Trading",
-      "type": "row",
-      "collapsed": false,
-      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 36}
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36}
     },
     {
       "id": 16,
+      "title": "Economy & Trading",
+      "type": "row",
+      "collapsed": false,
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 44}
+    },
+    {
+      "id": 17,
       "title": "Auction House",
       "type": "barchart",
       "targets": [
@@ -580,10 +643,10 @@
           "legendFormat": "{{house}}"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 37}
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 45}
     },
     {
-      "id": 17,
+      "id": 18,
       "title": "Money Transactions",
       "type": "stat",
       "targets": [
