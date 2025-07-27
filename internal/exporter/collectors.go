@@ -1061,10 +1061,10 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 
 	// Query for players currently in battleground maps
 	rows, err = e.connections.Characters.Query(`
-		SELECT map, race, COUNT(*) as count
+		SELECT map, instance_id, race, COUNT(*) as count
 		FROM characters 
 		WHERE online = 1 AND map IN (30, 489, 529, 566, 607, 628, 726, 727, 761, 968, 998, 1010, 1011, 1105, 1280, 1681, 1803, 2106, 2107, 2177, 2245, 3358, 3359, 3360, 3361, 3362, 3363, 3364, 3365, 3366, 3367, 3368, 3369, 3370, 3371)
-		GROUP BY map, race
+		GROUP BY map, instance_id, race
 	`)
 	if err != nil {
 		return fmt.Errorf("error querying active battleground players: %v", err)
@@ -1075,8 +1075,8 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 	activeBattlegrounds := make(map[int]int)
 
 	for rows.Next() {
-		var mapID, race, count int
-		if err := rows.Scan(&mapID, &race, &count); err != nil {
+		var mapID, instanceID, race, count int
+		if err := rows.Scan(&mapID, &instanceID, &race, &count); err != nil {
 			continue
 		}
 
@@ -1091,7 +1091,9 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 			faction = "Alliance"
 		}
 
-		metrics.ActiveBattlegroundPlayers.WithLabelValues(bgName, fmt.Sprintf("%d", mapID), faction).Set(float64(count))
+		// Add instance ID to the metric labels for uniqueness
+		instanceLabel := fmt.Sprintf("%s_%d", bgName, instanceID)
+		metrics.ActiveBattlegroundPlayers.WithLabelValues(instanceLabel, fmt.Sprintf("%d", mapID), faction).Set(float64(count))
 		activeBattlegrounds[mapID] += count
 		totalActivePlayers += count
 	}
