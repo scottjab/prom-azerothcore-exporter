@@ -1019,5 +1019,94 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 		}
 	}
 
+	// Active battleground tracking
+	// Common battleground map IDs
+	battlegroundMaps := map[int]string{
+		30:   "Alterac Valley",
+		489:  "Warsong Gulch",
+		529:  "Arathi Basin",
+		566:  "Eye of the Storm",
+		607:  "Strand of the Ancients",
+		628:  "Isle of Conquest",
+		726:  "Twin Peaks",
+		727:  "Silvershard Mines",
+		761:  "The Battle for Gilneas",
+		968:  "Eye of the Storm (Rated)",
+		998:  "Temple of Kotmogu",
+		1010: "Battle for Gilneas (Rated)",
+		1011: "Deepwind Gorge",
+		1105: "Mugambala",
+		1280: "Southshore vs Tarren Mill",
+		1681: "Arathi Basin Winter",
+		1803: "Seething Shore",
+		2106: "Warsong Gulch (Rated)",
+		2107: "Twin Peaks (Rated)",
+		2177: "Temple of Kotmogu (Rated)",
+		2245: "Deepwind Gorge (Rated)",
+		3358: "Arathi Basin (Rated)",
+		3359: "Eye of the Storm (Rated)",
+		3360: "Warsong Gulch (Rated)",
+		3361: "Twin Peaks (Rated)",
+		3362: "Temple of Kotmogu (Rated)",
+		3363: "Deepwind Gorge (Rated)",
+		3364: "Seething Shore (Rated)",
+		3365: "Arathi Basin Winter (Rated)",
+		3366: "Southshore vs Tarren Mill (Rated)",
+		3367: "Mugambala (Rated)",
+		3368: "Silvershard Mines (Rated)",
+		3369: "The Battle for Gilneas (Rated)",
+		3370: "Strand of the Ancients (Rated)",
+		3371: "Isle of Conquest (Rated)",
+	}
+
+	// Query for players currently in battleground maps
+	rows, err = e.connections.Characters.Query(`
+		SELECT map, race, COUNT(*) as count
+		FROM characters 
+		WHERE online = 1 AND map IN (30, 489, 529, 566, 607, 628, 726, 727, 761, 968, 998, 1010, 1011, 1105, 1280, 1681, 1803, 2106, 2107, 2177, 2245, 3358, 3359, 3360, 3361, 3362, 3363, 3364, 3365, 3366, 3367, 3368, 3369, 3370, 3371)
+		GROUP BY map, race
+	`)
+	if err != nil {
+		return fmt.Errorf("error querying active battleground players: %v", err)
+	}
+	defer database.CloseRowsWithLog(rows)
+
+	totalActivePlayers := 0
+	activeBattlegrounds := make(map[int]int)
+
+	for rows.Next() {
+		var mapID, race, count int
+		if err := rows.Scan(&mapID, &race, &count); err != nil {
+			continue
+		}
+
+		bgName, exists := battlegroundMaps[mapID]
+		if !exists {
+			bgName = fmt.Sprintf("Unknown_BG_%d", mapID)
+		}
+
+		// Determine faction based on race
+		faction := "Horde"
+		if race == 1 || race == 3 || race == 4 || race == 7 || race == 11 || race == 22 || race == 25 || race == 29 || race == 37 {
+			faction = "Alliance"
+		}
+
+		metrics.ActiveBattlegroundPlayers.WithLabelValues(bgName, fmt.Sprintf("%d", mapID), faction).Set(float64(count))
+		activeBattlegrounds[mapID] += count
+		totalActivePlayers += count
+	}
+
+	// Set active battleground counts
+	for mapID, count := range activeBattlegrounds {
+		bgName, exists := battlegroundMaps[mapID]
+		if !exists {
+			bgName = fmt.Sprintf("Unknown_BG_%d", mapID)
+		}
+		metrics.ActiveBattlegrounds.WithLabelValues(bgName, fmt.Sprintf("%d", mapID)).Set(float64(count))
+	}
+
+	// Set total active battleground players
+	metrics.ActiveBattlegroundTotal.Set(float64(totalActivePlayers))
+
 	return nil
 }

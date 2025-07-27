@@ -439,4 +439,28 @@ var (
 		},
 		[]string{"time_period"},
 	)
+
+	// Active battleground metrics
+	ActiveBattlegrounds = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "wow_active_battlegrounds",
+			Help: "Number of active battlegrounds by type",
+		},
+		[]string{"battleground_name", "map_id"},
+	)
+
+	ActiveBattlegroundPlayers = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "wow_active_battleground_players",
+			Help: "Number of players currently in battlegrounds by type",
+		},
+		[]string{"battleground_name", "map_id", "faction"},
+	)
+
+	ActiveBattlegroundTotal = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "wow_active_battleground_total",
+			Help: "Total number of players currently in battlegrounds",
+		},
+	)
 )

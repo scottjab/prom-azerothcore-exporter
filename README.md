@@ -25,6 +25,7 @@ A comprehensive Prometheus exporter for World of Warcraft private servers runnin
 ### ⚔️ Battleground & PvP
 - Battleground templates and configuration
 - Random battleground queue
+- **Active battlegrounds and players** (NEW!)
 - Battleground statistics
 - Battleground deserters
 - Player performance in battlegrounds
@@ -319,6 +320,9 @@ go run main.go 2>&1 | tee exporter.log
 ### Battleground Metrics
 - `wow_battleground_templates{template_id,script_name}` - BG templates
 - `wow_random_battleground_queue` - Players in random BG queue
+- `wow_active_battleground_total` - Total players currently in battlegrounds
+- `wow_active_battlegrounds{battleground_name,map_id}` - Active battlegrounds by type
+- `wow_active_battleground_players{battleground_name,map_id,faction}` - Players in active battlegrounds by faction
 - `wow_battleground_stats{stat}` - BG statistics
 - `wow_battleground_deserters` - BG deserters
 

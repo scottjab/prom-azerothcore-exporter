@@ -47,6 +47,9 @@ A full-featured dashboard with all available metrics organized into logical sect
 - **BG Activity**: Random battleground queue and deserters
 - **BG by Type**: Battleground distribution by type
 - **BG Wins by Faction**: Battleground wins by faction
+- **Active Battlegrounds**: Total players currently in battlegrounds
+- **Active BG by Type**: Currently active battlegrounds by type
+- **Active BG Players by Faction**: Players in active battlegrounds by faction
 
 ### System Logs & Events
 - **Log Activity**: System logs by type

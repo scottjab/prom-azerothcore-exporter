@@ -132,6 +132,9 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 	metrics.BattlegroundTemplates.Collect(ch)
 	metrics.BattlegroundTemplateDetails.Collect(ch)
 	metrics.RecentBattlegrounds.Collect(ch)
+	metrics.ActiveBattlegrounds.Collect(ch)
+	metrics.ActiveBattlegroundPlayers.Collect(ch)
+	metrics.ActiveBattlegroundTotal.Collect(ch)
 }
 
 // Describe implements prometheus.Collector
@@ -190,6 +193,9 @@ func (e *Exporter) Describe(ch chan<- *prometheus.Desc) {
 	metrics.BattlegroundTemplates.Describe(ch)
 	metrics.BattlegroundTemplateDetails.Describe(ch)
 	metrics.RecentBattlegrounds.Describe(ch)
+	metrics.ActiveBattlegrounds.Describe(ch)
+	metrics.ActiveBattlegroundPlayers.Describe(ch)
+	metrics.ActiveBattlegroundTotal.Describe(ch)
 }
 
 // Helper function for writing HTTP responses

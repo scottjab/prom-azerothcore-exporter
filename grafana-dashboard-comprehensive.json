@@ -800,11 +800,47 @@
       "gridPos": {"h": 8, "w": 8, "x": 16, "y": 64}
     },
     {
+      "id": 28.1,
+      "title": "Active Battlegrounds",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "wow_active_battleground_total",
+          "legendFormat": "Total Players in BGs"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 8, "x": 0, "y": 72}
+    },
+    {
+      "id": 28.2,
+      "title": "Active BG by Type",
+      "type": "barchart",
+      "targets": [
+        {
+          "expr": "wow_active_battlegrounds",
+          "legendFormat": "{{battleground_name}}"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 8, "x": 8, "y": 72}
+    },
+    {
+      "id": 28.3,
+      "title": "Active BG Players by Faction",
+      "type": "barchart",
+      "targets": [
+        {
+          "expr": "wow_active_battleground_players",
+          "legendFormat": "{{battleground_name}} - {{faction}}"
+        }
+      ],
+      "gridPos": {"h": 8, "w": 8, "x": 16, "y": 72}
+    },
+    {
       "id": 29,
       "title": "System Logs & Events",
       "type": "row",
       "collapsed": false,
-      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 72}
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 80}
     },
     {
       "id": 30,
@@ -816,7 +852,7 @@
           "legendFormat": "{{type}}"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 73}
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 81}
     },
     {
       "id": 31,
@@ -840,14 +876,14 @@
           "legendFormat": "IP Action Logs"
         }
       ],
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 73}
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 81}
     },
     {
       "id": 32,
       "title": "Chat & Communication",
       "type": "row",
       "collapsed": false,
-      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 81}
+      "gridPos": {"h": 1, "w": 24, "x": 0, "y": 89}
     },
     {
       "id": 33,
@@ -863,7 +899,7 @@
           "legendFormat": "Channel Bans"
         }
       ],
-      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 82}
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 90}
     }
   ],
   "refresh": "30s",
