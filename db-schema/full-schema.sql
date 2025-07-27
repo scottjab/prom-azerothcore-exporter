@@ -783,6 +783,7 @@ CREATE TABLE `account` (
   `last_login` timestamp NULL DEFAULT NULL,
   `online` int unsigned NOT NULL DEFAULT '0',
   `expansion` tinyint unsigned NOT NULL DEFAULT '2',
+  `Flags` int unsigned NOT NULL DEFAULT '0',
   `mutetime` bigint NOT NULL DEFAULT '0',
   `mutereason` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
   `muteby` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '',
@@ -792,7 +793,7 @@ CREATE TABLE `account` (
   `totaltime` int unsigned NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`),
   UNIQUE KEY `idx_username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=108 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Account System';
+) ENGINE=InnoDB AUTO_INCREMENT=258 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Account System';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -2888,6 +2889,25 @@ CREATE TABLE `mail_server_template_items` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `mod_auctionator_market_price`
+--
+
+DROP TABLE IF EXISTS `mod_auctionator_market_price`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_auctionator_market_price` (
+  `entry` int NOT NULL,
+  `average_price` int DEFAULT NULL,
+  `buyout` int DEFAULT NULL,
+  `bid` int DEFAULT NULL,
+  `count` int DEFAULT NULL,
+  `scan_datetime` datetime DEFAULT NULL,
+  PRIMARY KEY (`entry`),
+  KEY `entry` (`entry`,`scan_datetime`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `pet_aura`
 --
 
@@ -3207,7 +3227,7 @@ CREATE TABLE `world_state` (
   `Id` int unsigned NOT NULL COMMENT 'Internal save ID',
   `Data` longtext,
   PRIMARY KEY (`Id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='WorldState save system';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='WorldState save system';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3306,6 +3326,21 @@ CREATE TABLE `playerbots_account_links` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `playerbots_account_type`
+--
+
+DROP TABLE IF EXISTS `playerbots_account_type`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `playerbots_account_type` (
+  `account_id` int unsigned NOT NULL,
+  `account_type` tinyint unsigned NOT NULL DEFAULT '0' COMMENT '0 = unassigned, 1 = RNDbot, 2 = AddClass',
+  `assignment_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Playerbot account type assignments';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `playerbots_custom_strategy`
 --
 
@@ -3337,7 +3372,7 @@ CREATE TABLE `playerbots_db_store` (
   `value` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `guid` (`guid`)
-) ENGINE=InnoDB AUTO_INCREMENT=583 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=3124 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -3546,7 +3581,7 @@ CREATE TABLE `playerbots_random_bots` (
   KEY `bot` (`bot`),
   KEY `event` (`event`),
   KEY `idx_owner_bot_event` (`owner`,`bot`,`event`)
-) ENGINE=InnoDB AUTO_INCREMENT=2419092 DEFAULT CHARSET=utf8mb3;
+) ENGINE=InnoDB AUTO_INCREMENT=5124918 DEFAULT CHARSET=utf8mb3;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -8029,6 +8064,65 @@ CREATE TABLE `milling_loot_template` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `mod_auctionator_disabled_items`
+--
+
+DROP TABLE IF EXISTS `mod_auctionator_disabled_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_auctionator_disabled_items` (
+  `item` mediumint unsigned NOT NULL,
+  PRIMARY KEY (`item`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mod_auctionator_item_class`
+--
+
+DROP TABLE IF EXISTS `mod_auctionator_item_class`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_auctionator_item_class` (
+  `class` tinyint unsigned NOT NULL,
+  `subclass` tinyint unsigned DEFAULT NULL,
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
+  UNIQUE KEY `mod_auctionator_item_class_class_IDX` (`class`,`subclass`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mod_auctionator_item_quality`
+--
+
+DROP TABLE IF EXISTS `mod_auctionator_item_quality`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_auctionator_item_quality` (
+  `quality` tinyint NOT NULL COMMENT 'Quality value of the item',
+  `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  PRIMARY KEY (`quality`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Quality mappings from native int value to friendly name';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `mod_auctionator_itemclass_config`
+--
+
+DROP TABLE IF EXISTS `mod_auctionator_itemclass_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mod_auctionator_itemclass_config` (
+  `class` int NOT NULL COMMENT 'item class',
+  `subclass` int NOT NULL COMMENT 'item subclass',
+  `bonding` int NOT NULL COMMENT 'bonding level that is the minimum for this class. 2 means greens (for gear), 1 means whites (for bags).',
+  `max_count` int NOT NULL DEFAULT '1' COMMENT 'The maximum number of unique versions of these items to add to the house. Low numbers keep items like weapons from having lots of dups. High nubmers are useful for crafting mats.',
+  `stack_count` int NOT NULL DEFAULT '1',
+  PRIMARY KEY (`class`,`subclass`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `mod_auctionhousebot`
 --
 
@@ -11642,4 +11736,4 @@ CREATE TABLE `worldmapoverlay_dbc` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-07-14 16:43:49
+-- Dump completed on 2025-07-27 22:21:00
