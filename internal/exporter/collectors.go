@@ -1091,9 +1091,8 @@ func (e *Exporter) collectBattlegroundMetrics() error {
 			faction = "Alliance"
 		}
 
-		// Add instance ID to the metric labels for uniqueness
-		instanceLabel := fmt.Sprintf("%s_%d", bgName, instanceID)
-		metrics.ActiveBattlegroundPlayers.WithLabelValues(instanceLabel, fmt.Sprintf("%d", mapID), faction).Set(float64(count))
+		// Use clean battleground name and instance ID as separate labels
+		metrics.ActiveBattlegroundPlayers.WithLabelValues(bgName, fmt.Sprintf("%d", mapID), faction, fmt.Sprintf("%d", instanceID)).Set(float64(count))
 		activeBattlegrounds[mapID] += count
 		totalActivePlayers += count
 	}

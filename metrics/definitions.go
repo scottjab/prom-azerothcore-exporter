@@ -454,7 +454,7 @@ var (
 			Name: "wow_active_battleground_players",
 			Help: "Number of players currently in battlegrounds by type",
 		},
-		[]string{"battleground_name", "map_id", "faction"},
+		[]string{"battleground_name", "map_id", "faction", "instance_id"},
 	)
 
 	ActiveBattlegroundTotal = prometheus.NewGauge(
